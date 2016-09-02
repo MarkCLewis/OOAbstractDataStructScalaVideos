@@ -1,6 +1,6 @@
 package oodetails
 
-class MutableVect2D(private var _x: Double, private var _y: Double) {
+class MutableVect2D(private[this] var _x: Double, private[this] var _y: Double) {
   def x = _x
   def y = _y
   def x_=(newX: Double): Unit = _x = newX
@@ -40,11 +40,13 @@ class MutableVect2D(private var _x: Double, private var _y: Double) {
 
 object MutableVect2D {
   def main(args: Array[String]): Unit = {
-    val v1 = new MutableVect2D(1, 2)
-    val v2 = new MutableVect2D(2, 2)
+    val v1 = MutableVect2D(1, 2)
+    val v2 = MutableVect2D(2, 2)
     v1 += v2
     v1 *= 3+2
     v1.x = 10
     println(v1.magnitude)
   }
+  
+  def apply(x: Double, y: Double) = new MutableVect2D(x,y)
 }
