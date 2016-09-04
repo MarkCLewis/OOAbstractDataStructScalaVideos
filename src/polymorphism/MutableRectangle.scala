@@ -2,8 +2,8 @@ package polymorphism
 
 import scalafx.scene.paint.Color
 
-class MutableRectangle(private var _width: Double, private var _height: Double, c: Color) 
-    extends Shape(c) {
+class MutableRectangle(private var _width: Double, private var _height: Double, val color: Color) 
+    extends Shape with HasColor {
   def width = _width
   def height = _height
   def width_=(w: Double) = _width = w
