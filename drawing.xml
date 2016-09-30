@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<drawing>
+  <drawable type="transform" transType="translate" value1="0.0" value2="0.0">
+  	<drawable type="rectangle" x="0" y="0" width="100" height="200">
+  	  <color red="0.0" green="0.0" blue="1.0" opacity="1.0"/>
+  	  This is text inside of an element.
+  	  <!-- This is a comment. -->
+  	</drawable>
+  	<drawable type="text" x="100" y="100">
+  	  <color red="0.0" green="0.0" blue="0.0" opacity="1.0"/>
+  	  <text>This is the text that will be drawn.</text>
+  	</drawable>
+  </drawable>
+</drawing>
