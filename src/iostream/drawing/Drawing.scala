@@ -4,22 +4,22 @@ import scalafx.scene.control.TreeItem
 import scalafx.scene.canvas.GraphicsContext
 import scalafx.scene.paint.Color
 
-class Drawing {
-  val root = new DrawTransform(this)
-  private var _gc = None: Option[GraphicsContext]
+class Drawing extends Serializable {
+  private var root = new DrawTransform(this)
+  @transient private var _gc = null:GraphicsContext
   private var _vars = Map[String, Double]()
 
   def gc = _gc
-  def gc_=(g: GraphicsContext): Unit = _gc = Some(g)
+  def gc_=(g: GraphicsContext): Unit = _gc = g
   
   def vars = _vars
   def setVar(varName: String, value: Double): Unit = _vars = _vars + (varName -> value)
 
   def draw(): Unit = {
-    _gc.foreach { g =>
-      g.fill = Color.White
-      g.fillRect(0, 0, 2000, 2000)
-      root.draw(g)
+    if(_gc != null) { 
+      gc.fill = Color.White
+      gc.fillRect(0, 0, 2000, 2000)
+      root.draw(gc)
     }
   }
 
@@ -32,5 +32,25 @@ class Drawing {
       case _ => new TreeItem(d)
     }
     helper(root)
+  }
+  
+  def toXML: xml.Node = {
+    <drawing>
+			{root.toXML}
+			{_vars.map(t => <vars key={t._1} value={t._2.toString}/>)}
+		</drawing>
+  }
+}
+
+object Drawing {
+  def apply(node: xml.Node): Drawing = {
+    val d = new Drawing
+    d.root = DrawTransform(d, (node \ "drawable").head)
+    d._vars = (node \ "vars").map { v =>
+      val key = (v \ "@key").text
+      val value = (v \ "@value").text.toDouble
+      key -> value
+    }.toMap
+    d
   }
 }

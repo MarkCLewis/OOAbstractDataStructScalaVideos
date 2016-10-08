@@ -28,16 +28,19 @@ import scalafx.scene.control.TreeItem
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 import scalafx.application.Platform
+import scalafx.stage.FileChooser
+import iostream.LoanPattern
+import scalafx.scene.control.Alert
+import scalafx.scene.control.Alert.AlertType
 
 object DrawingMain extends JFXApp {
   private var drawings = List[(Drawing, TreeView[Drawable])]()
-  
+
   private val creators = Map[String, Drawing => Drawable](
-      "Rectangle" -> (d => new DrawRectangle(d, 0, 0, 100, 100, Color.Black)),
-      "Transform" -> (d => new DrawTransform(d)),
-      "Text" -> (d => new DrawText(d, 0, 20, "Text", Color.Black)),
-      "Maze" -> (d => new DrawMaze(d))
-      )
+    "Rectangle" -> (d => new DrawRectangle(d, 0, 0, 100, 100, Color.Black)),
+    "Transform" -> (d => new DrawTransform(d)),
+    "Text" -> (d => new DrawText(d, 0, 20, "Text", Color.Black)),
+    "Maze" -> (d => new DrawMaze(d)))
 
   stage = new JFXApp.PrimaryStage {
     title = "Drawing Program"
@@ -68,6 +71,58 @@ object DrawingMain extends JFXApp {
         val (tab, tree) = makeDrawingTab(newDrawing, "Untitled")
         drawings = drawings :+ newDrawing -> tree
         tabPane += tab
+      }
+      openItem.onAction = (ae: ActionEvent) => {
+        val chooser = new FileChooser {
+          title = "Open Drawing"
+        }
+        val file = chooser.showOpenDialog(stage)
+        if (file != null) {
+          val drawing = if (file.getName.endsWith(".xml")) {
+            val xmlData = xml.XML.loadFile(file)
+            Drawing(xmlData)
+          } else {
+            LoanPattern.withOIS(file.getAbsolutePath) { ois =>
+              ois.readObject() match {
+                case d: Drawing => d
+                case _ =>
+                  new Alert(AlertType.Information) {
+                    title = "Bad Content"
+                    headerText = "Load Failed"
+                    contentText = "File did not contain a drawing."
+                  }.showAndWait()
+                  null
+              }
+            }
+          }
+          if (drawing != null) {
+            val (tab, tree) = makeDrawingTab(drawing, file.getName)
+            drawings = drawings :+ drawing -> tree
+            tabPane += tab
+            drawing.draw()
+          }
+        }
+      }
+      saveItem.onAction = (ae: ActionEvent) => {
+        val current = tabPane.selectionModel().selectedIndex()
+        if (current >= 0) {
+          val (drawing, _) = drawings(current)
+          val chooser = new FileChooser {
+            title = "Save Drawing"
+          }
+          val file = chooser.showSaveDialog(stage)
+          if (file != null) {
+            if (file.getName.endsWith(".xml")) {
+              val xmlData = drawing.toXML
+              xml.XML.save(file.getAbsolutePath, xmlData)
+            } else {
+              LoanPattern.withOOS(file.getAbsolutePath) { oos =>
+                oos.writeObject(drawing)
+              }
+            }
+            tabPane.tabs(current).text = file.getName
+          }
+        }
       }
       addItem.onAction = (ae: ActionEvent) => {
         val current = tabPane.selectionModel().selectedIndex()
@@ -133,13 +188,13 @@ object DrawingMain extends JFXApp {
     rightSplit.orientation = Orientation.Vertical
     rightSplit.items ++= List(topRightBorder, bottomRightBorder)
     rightSplit.dividerPositions = 0.7
-    
+
     // Handle commands
     commandField.onAction = (ae: ActionEvent) => {
       val command = commandField.text()
       val result = Future { Commands(command, drawing) }
       result.foreach { r =>
-        Platform.runLater(commandArea.appendText("> "+command+"\n"+r+"\n"))
+        Platform.runLater(commandArea.appendText("> " + command + "\n" + r + "\n"))
       }
       commandField.text = ""
     }

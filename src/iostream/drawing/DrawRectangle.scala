@@ -10,6 +10,8 @@ import scalafx.scene.layout.BorderPane
 import scalafx.scene.control.TextField
 import scalafx.event.ActionEvent
 import scalafx.scene.control.ColorPicker
+import java.io.ObjectOutputStream
+import java.io.ObjectInputStream
 
 class DrawRectangle(
     val drawing: Drawing,
@@ -17,10 +19,10 @@ class DrawRectangle(
     private var y: Double,
     private var width: Double,
     private var height: Double,
-    private var color: Color
+    @transient private var color: Color
     ) extends Drawable {
   
-  private var propPanel: Option[Node] = None
+  @transient private var propPanel: Node = null
   
   def draw(gc: GraphicsContext): Unit = {
     gc.fill = color
@@ -28,7 +30,7 @@ class DrawRectangle(
   }
 
   def propertiesPanel: Node = {
-    if(propPanel.isEmpty) {
+    if(propPanel == null) {
       val panel = new VBox
       val xField = DrawingMain.labeledTextField("x", x.toString(), s => {
         x = s.toDouble
@@ -53,10 +55,40 @@ class DrawRectangle(
       }
       
       panel.children = List(xField, yField, widthField, heightField, colorPicker)
-      propPanel = Some(panel)
+      propPanel = panel
     }
-    propPanel.get
+    propPanel
   }
   
-  override def toString: String = "Rectangle" 
+  override def toString: String = "Rectangle"
+  
+  def toXML: xml.Node = {
+    <drawable type="Rectangle" x={x.toString} y={y.toString} width={width.toString} height={height.toString}>
+			{Drawable.colorToXML(color)}
+		</drawable>
+  }
+  
+  private def writeObject(oos: ObjectOutputStream): Unit = {
+    oos.defaultWriteObject()
+    oos.writeDouble(color.red)
+    oos.writeDouble(color.green)
+    oos.writeDouble(color.blue)
+    oos.writeDouble(color.opacity)
+  }
+  
+  private def readObject(ois: ObjectInputStream): Unit = {
+    ois.defaultReadObject()
+    color = Color(ois.readDouble(),ois.readDouble(),ois.readDouble(),ois.readDouble())
+  }
+}
+
+object DrawRectangle {
+  def apply(d: Drawing, node: xml.Node): DrawRectangle = {
+    val x = (node \ "@x").text.toDouble
+    val y = (node \ "@y").text.toDouble
+    val width = (node \ "@width").text.toDouble
+    val height = (node \ "@height").text.toDouble
+    val color = Drawable.xmlToColor((node \ "color").head)
+    new DrawRectangle(d, x, y, width, height, color)
+  }
 }

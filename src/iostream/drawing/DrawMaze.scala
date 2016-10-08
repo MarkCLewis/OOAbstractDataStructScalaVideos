@@ -9,11 +9,9 @@ import scalafx.scene.control.Button
 import scalafx.event.ActionEvent
 
 class DrawMaze(val drawing: Drawing) extends Drawable {
-  private var propPanel: Option[scalafx.scene.Node] = None
+  @transient private var propPanel: scalafx.scene.Node = null
   private var startX, startY = 0
   private var endX, endY = 9
-  private val offsets = Vector((0, -1), (1, 0), (0, 1), (-1, 0))
-  private val boxSize = 20
   private var shortPath = List[(Int, Int)]()
 
   private val maze = Array(
@@ -27,6 +25,8 @@ class DrawMaze(val drawing: Drawing) extends Drawable {
     Array(0, 1, 0, 0, 0, 0, 0, 0, 0, 0),
     Array(0, 1, 0, 1, 1, 1, 1, 0, 1, 0),
     Array(0, 0, 0, 1, 0, 0, 0, 0, 1, 0))
+
+  import DrawMaze._
 
   override def toString = "Maze"
 
@@ -43,7 +43,7 @@ class DrawMaze(val drawing: Drawing) extends Drawable {
   }
 
   def propertiesPanel: scalafx.scene.Node = {
-    if (propPanel.isEmpty) {
+    if (propPanel == null) {
       val panel = new VBox
       val bfs = new Button("Breadth First Search")
       bfs.onAction = (ae: ActionEvent) => {
@@ -53,9 +53,9 @@ class DrawMaze(val drawing: Drawing) extends Drawable {
         }
       }
       panel.children = List(bfs)
-      propPanel = Some(panel)
+      propPanel = panel
     }
-    propPanel.get
+    propPanel
   }
 
   def breadthFirstSearch(): Option[List[(Int, Int)]] = {
@@ -80,4 +80,19 @@ class DrawMaze(val drawing: Drawing) extends Drawable {
     }
     solution
   }
+
+  def toXML: xml.Node = {
+    <drawable type="Maze">
+    </drawable>
+  }
+}
+
+object DrawMaze {
+  private val offsets = Vector((0, -1), (1, 0), (0, 1), (-1, 0))
+  private val boxSize = 20
+
+  def apply(d: Drawing, node: xml.Node): DrawMaze = {
+    new DrawMaze(d)
+  }
+
 }

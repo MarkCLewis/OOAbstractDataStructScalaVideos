@@ -1,0 +1,11 @@
+<drawing>
+			<drawable type="Transform" transType="Translate" value1="0.0" value2="0.0">
+			<drawable type="Rectangle" x="0.0" y="0.0" width="100.0" height="100.0">
+			<color red="0.9019607901573181" green="0.9019607901573181" blue="0.501960813999176" opacity="1.0"/>
+		</drawable><drawable type="Text" x="0.0" y="20.0">
+			<text>Text Stuff</text>
+			<color red="0.0" green="0.0" blue="0.0" opacity="1.0"/>
+		</drawable>
+		</drawable>
+			
+		</drawing>
